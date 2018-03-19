@@ -191,64 +191,220 @@ void quickSort(int arr[], int num)
 //heap sort
 void heapAdjust(int arr[], int index, int num)
 {
-    if (2*index+1 > LEN-2)
-    {
+    int left = 2*index+1;
+    int right = 2*index+2;
+    if (num < 2 || left>num-1)
         return;
-    }
-    if (2*index+2 > LEN-2)
-    {
-        if (arr[index] < arr[2*index+1])
-        {
-            int tmp = arr[index];
-            arr[index] = arr[2*index+1];
-            arr[2*index+1] = tmp;
-        }
-        return;
-    }
-    int index_new = arr[2*index+2] > arr[2*index+1] ? 2*index+2 : 2*index+1;
-    if (arr[index] < arr[index_new])
+    int index_new = 0;
+    if (right>num-1)
+        index_new = left;
+    else
+        index_new = arr[right]>arr[left]?right:left;
+    if (arr[index]<arr[index_new])
     {
         int tmp = arr[index_new];
-        arr[index_new] = arr[index];
+        arr[index_new]=arr[index];
         arr[index] = tmp;
-        heapAdjust(&arr[index_new], index_new, num-1);
+        heapAdjust(arr, index_new, num);
+    }
+    return;
+}
+
+void buildHeap(int arr[], int num)
+{
+    if (num < 2)
+        return;
+    int start = (num -2)/2;
+    for (int i = start; i >= 0; --i)
+    {
+        heapAdjust(arr, i, num);
     }
 }
 
 void heapSort(int arr[], int num)
 {
-    if (num < 2)
+    if(num < 2)
         return;
-    int start = (num - 2)/2;
-    cout << "start:"<<arr[start]<<endl;
-    for (int i = start; i >= 0; --i)
-    {
-        int index = 0;
-        if (2*i+2 > num -2)
-            index = 2*i+1;
-        else
-            index = arr[2*i+2] > arr[2*i+1] ? 2*i+2 : 2*i+1;
-        if (arr[i] < arr[index])
-        {
-            int tmp = arr[index];
-            arr[index] = arr[i];
-            arr[i] = tmp;
-            heapAdjust(&arr[index], index, num-1);
-        }
-    }
-    printArr(arr);
-    cout<<endl;
+    buildHeap(arr, num);
     int tmp = arr[num-1];
     arr[num-1] = arr[0];
     arr[0] = tmp;
-    heapSort(arr, num - 1);
+    while(num >2)
+    {
+        heapAdjust(arr, 0, num-1);
+        int tmp = arr[num-2];
+        arr[num-2] = arr[0];
+        arr[0] = tmp;
+        num--;
+    }
+    return;
+}
+
+//count sort
+void countSort(int arr[], int minNum, int maxNum)
+{
+    int length = maxNum - minNum + 1;
+    int tmp[length] = {0};
+    for (int i = 0; i< 10; ++i)
+    {
+        tmp[arr[i]-minNum]++;
+    }
+
+    for (int i =0 ,j=0; i < length; ++i)
+    {
+        while(tmp[i]>0)
+        {
+            arr[j]=i;
+            ++j;
+            tmp[i]--;
+        }
+    }
+}
+
+//radix sort
+int maxbit(int arr[], int num)
+{
+    int bitnum = 1, p = 10;
+    for (int i=0; i < num; ++i)
+    {
+        while(arr[i]>=p)
+        {
+            bitnum++;
+            p *= 10;
+        }
+    }
+    return bitnum;
+}
+
+void radixSort(int arr[], int num)
+{
+    int tmp[num];
+    int bitnum = maxbit(arr, num);
+    int radix = 1;
+    for (int i =0; i <bitnum;++i)
+    {
+        int count[10]={0};
+        for (int j = 0; j < num; ++j)
+            tmp[j] = arr[j];
+        for (int j = 0; j < num;++j)
+            count[tmp[j]/radix%10]++;
+        for (int j =1;j<10;++j)
+            count[j] = count[j-1]+count[j];
+        for (int j=num-1;j>=0;--j)
+        {
+            count[tmp[j]/radix%10]--;
+            arr[count[tmp[j]/radix%10]]=tmp[j];
+        }
+        radix=radix*10;
+    }
+}
+
+//bucket sort
+#define BUCKETNUM 6
+#define INTERNAL 10
+typedef struct listNode
+{
+    int val;
+    listNode *next;
+    listNode(int x){val = x; next = NULL;}
+}listNode;
+
+void printList(listNode *head)
+{
+    while(head != NULL)
+    {
+        cout << head->val<<endl;
+        head = head->next;
+    }
+}
+
+int getBucketIndex(int num)
+{
+    return num/INTERNAL;
+}
+
+void insertNode(listNode *bucket[], int index, listNode *newNode)
+{
+    listNode *head = bucket[index];
+    if (head == NULL)
+    {
+        head = newNode;
+        bucket[index] = head;
+        return;
+    }
+    while(head->next)
+    {
+        head = head->next;
+    }
+    head->next = newNode;
+}
+
+void list2arr(listNode *listVar, int arr[])
+{
+    static int NUM =0;
+    while(listVar)
+    {
+        arr[NUM] = listVar->val;
+        NUM++;
+        listVar = listVar->next;
+    }
+}
+
+void sortList(listNode *listVar)
+{
+    listNode *head= listVar;
+    int num = 0;
+    while(head)
+    {
+        head = head->next;
+        num++;
+    }
+
+    int arr[num]= {0};
+    int i = 0;
+    head = listVar;
+    while(head)
+    {
+        arr[i] = head->val;
+        head = head->next;
+        i++;
+    }
+    heapSort(arr, num);
+    head = listVar;
+    for(int i =0; i<num;++i)
+    {
+        head->val = arr[i];
+        head = head->next;
+    }
 }
 
 
+void bucketSort(int arr[], int num)
+{
+    listNode *bucket[BUCKETNUM]={NULL};
+    int index;
+    for (int i =0;i<num;++i)
+    {
+        index = getBucketIndex(arr[i]);
+        listNode *tmp=new listNode(arr[i]);
+        insertNode(bucket, index, tmp);
+    }
+
+    for (int i = 0; i < BUCKETNUM; ++i)
+    {
+        if (bucket[i] != NULL)
+        {
+            sortList(bucket[i]);
+            list2arr(bucket[i], arr);
+        }
+    }
+
+}
+
 int main()
 {
-    int arr1[LEN] = {3, 10, 45, 6, 4, -9, 0, -56, 8 ,10};
-    heapSort(arr1, 10);
+    int arr1[LEN] = {3, 10, 45, 6, 4, 9, 0, 56, 8 ,10};
+    bucketSort(arr1, 10);
     printArr(arr1);
     return 0;
 }
